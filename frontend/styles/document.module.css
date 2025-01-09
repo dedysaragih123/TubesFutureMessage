@@ -1,0 +1,194 @@
+/* Container Utama */
+.container {
+    font-family: 'Poppins', sans-serif;
+    color: #333333;
+    background: linear-gradient(to right, #ffecd2, #fcb69f);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 15px 20px;
+    background-color: white;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.navLeft {
+    display: flex;
+    align-items: center;
+}
+
+.navLogo {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.navTitle {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #f56b2a;
+    text-decoration: none;
+}
+
+/* Form Utama */
+.title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #f56b2a;
+    text-align: center;
+}
+
+.form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.label {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: block;
+    color: #333;
+}
+
+/* Input Styling */
+.input, .textArea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: 'Arial', sans-serif;
+}
+
+.input, .textArea, .select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.textArea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.inputError {
+    border-color: red;
+}
+
+.select {
+    appearance: none;
+    background: url('/icons/dropdown-icon.svg') no-repeat right 10px center;
+    background-size: 12px;
+}
+
+.select:focus {
+    outline: none;
+    border-color: #42a5f5;
+}
+
+/* Collaborators Section */
+.collaboratorInput {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.button {
+    padding: 10px 20px;
+    background-color: #42a5f5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button:hover {
+    background-color: #1e88e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.buttonPrimary {
+    padding: 12px 20px;
+    background: linear-gradient(to right, #42a5f5, #64b5f6);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.buttonPrimary:hover {
+    background: linear-gradient(to right, #64b5f6, #42a5f5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Collaborators List */
+.collaboratorsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.collaborator {
+    background-color: #f56b2a;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+/* Error Messages */
+.error {
+    color: red;
+    font-size: 0.9rem;
+    margin-top: -10px;
+}
+
+/* Actions Section */
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.actions .buttonPrimary {
+    width: auto;
+    padding: 10px 25px;
+}
+
+.collaboratorInput {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}

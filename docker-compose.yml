@@ -1,0 +1,56 @@
+services:
+  backend:
+    container_name: tst-backend-1
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:Saragih123@postgres_db:5432/future_message
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+
+  frontend:
+    container_name: tst-frontend-1
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: always
+    volumes:
+      - ./frontend:/app
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Saragih123
+      POSTGRES_DB: future_message
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+      timeout: 3s
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
+networks:
+  my_network:

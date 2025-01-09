@@ -1,0 +1,114 @@
+/* Container Utama */
+.container {
+    font-family: 'Poppins', sans-serif;
+    color: #333333;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Header Navigasi */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: white;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navLeft {
+    display: flex;
+    align-items: center;
+}
+
+.navLogo {
+    width: 40px;
+    margin-right: 10px;
+}
+
+.navTitle {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #FFB74D;
+    text-decoration: none;
+}
+
+.navLink {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #42A5F5;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navLink:hover {
+    color: #FFB74D;
+}
+
+/* Dashboard Container */
+.dashboardContainer {
+    max-width: 900px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #FFB74D;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #555555;
+    margin-bottom: 30px;
+}
+
+/* Options Grid */
+.options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.optionCard {
+    padding: 20px;
+    background-color: #F9FAFB;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.optionCard:hover {
+    background-color: #FFB74D;
+    color: white;
+    transform: translateY(-5px);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.optionCard h2 {
+    font-size: 1.3rem;
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.optionCard p {
+    font-size: 1rem;
+    color: #555;
+}
+
+.icon {
+    width: 50px;
+    margin-bottom: 15px;
+}

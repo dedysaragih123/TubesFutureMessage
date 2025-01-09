@@ -1,0 +1,136 @@
+.container {
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navLogo {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.navTitle {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ff9900;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, #ff9900, #ffcc33);
+    color: #fff;
+    text-align: center;
+    padding: 4rem 2rem;
+    border-radius: 0 0 20px 20px;
+}
+
+.heroLogo {
+    height: 80px;
+    margin-bottom: 1rem;
+}
+
+.heroTitle {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.heroSubtitle {
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Features Section */
+.features {
+    padding: 4rem 2rem;
+    background-color: #fff;
+    text-align: center;
+}
+
+.sectionTitle {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.featureCards {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.featureCard {
+    background-color: #f1f1f1;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: left;
+}
+
+.featureCard h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #ff9900;
+}
+
+.featureCard p {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* CTA Section */
+.cta {
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #ff9900, #ffcc33);
+    color: #fff;
+    text-align: center;
+    border-radius: 20px;
+}
+
+.ctaText {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.ctaButton {
+    background-color: #fff;
+    color: #ff9900;
+    padding: 0.8rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.ctaButton:hover {
+    background-color: #ffe680;
+    color: #333;
+}
+
+/* Footer */
+.footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+}
