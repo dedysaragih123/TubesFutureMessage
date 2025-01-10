@@ -34,3 +34,4 @@ dist/
 docker-compose.override.yml
 
 node_modules/
+frontend/node_modules/
