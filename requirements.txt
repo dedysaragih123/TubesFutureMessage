@@ -2,3 +2,4 @@ fastapi
 uvicorn
 alembic
 apscheduler
+python-dotenv

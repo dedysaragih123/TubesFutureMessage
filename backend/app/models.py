@@ -1,8 +1,13 @@
 from sqlalchemy import create_engine, Column, String, Text, Integer, ForeignKey, Table, DateTime, Boolean
 from sqlalchemy.orm import relationship, sessionmaker
 from app.base import Base
+from dotenv import load_dotenv
+import os
 
-DATABASE_URL = "postgresql://postgres:Saragih123@localhost:5432/future_message"
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = "postgresql://postgres:Saragih123@localhost:5432/future_message"
 
 engine = create_engine(DATABASE_URL)
 

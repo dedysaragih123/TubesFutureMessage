@@ -8,8 +8,13 @@ from fastapi import HTTPException
 from app.base import Base
 import logging
 from app.models import Document
+from dotenv import load_dotenv
+import os
 
-DATABASE_URL = "postgresql://postgres:Saragih123@postgres_db:5432/future_message"
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = "postgresql://postgres:Saragih123@localhost:5432/future_message"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
