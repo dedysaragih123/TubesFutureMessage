@@ -17,8 +17,6 @@ from datetime import datetime, timedelta
 app = FastAPI()
 scheduler = BackgroundScheduler()
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-
 # Middleware CORS (opsional jika frontend di-host di domain berbeda)
 app.add_middleware(
     CORSMiddleware,

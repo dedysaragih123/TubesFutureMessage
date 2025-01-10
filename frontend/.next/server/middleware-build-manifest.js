@@ -35,6 +35,11 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/dashboard.js"
     ],
+    "/document/create": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/document/create.js"
+    ],
     "/document/update": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
