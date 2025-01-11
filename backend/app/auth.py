@@ -11,11 +11,11 @@ from fastapi.security import OAuth2PasswordBearer
 import logging
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
 SECRET_KEY = "e4f01b2c8a4e4268f9ad3e3f5c2a4d2e4c8f0a1d3b6c7e2f1a0d5f9c8b1e2a4" 
 ALGORITHM = "HS256"
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 @router.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):

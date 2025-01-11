@@ -65,8 +65,10 @@ async def on_shutdown():
         scheduler.shutdown()
 
 def send_scheduled_emails():
-    # Membuat sesi database secara manual
-    db = SessionLocal()
+    """
+    Mengirimkan email terjadwal berdasarkan dokumen yang memenuhi syarat (delivery_date <= datetime.now dan is_sent == False).
+    """
+    db = SessionLocal()  # Membuat sesi database secara manual
     try:
         logging.info("Starting email scheduling job...")
 
@@ -78,38 +80,52 @@ def send_scheduled_emails():
         logging.info(f"Found {len(documents)} documents to process.")
 
         for doc in documents:
-            logging.info(f"Processing document: {doc.title}")
+            try:
+                logging.info(f"Processing document: {doc.title}")
 
-            # Ambil kolaborator untuk dokumen
-            collaborators = (
-                db.query(User.email)
-                .join(Collaborator, User.id == Collaborator.collaborator_id)
-                .filter(Collaborator.document_id == doc.id)
-                .all()
-            )
-
-            # Kirim email ke setiap kolaborator
-            for collaborator in collaborators:
-                send_email(
-                    to_email=collaborator.email,
-                    subject=f"Document: {doc.title}",
-                    body=doc.content
+                # Ambil kolaborator untuk dokumen
+                collaborators = (
+                    db.query(User.email)
+                    .join(Collaborator, User.id == Collaborator.collaborator_id)
+                    .filter(Collaborator.document_id == doc.id)
+                    .all()
                 )
-                logging.info(f"Email sent to {collaborator.email}")
 
-            # Tandai dokumen sebagai sudah dikirim
-            doc.is_sent = True
-            doc.sent_at = datetime.now()  # Tambahkan timestamp pengiriman (opsional)
-            db.commit()
-            logging.info(f"Document '{doc.title}' marked as sent.")
+                if not collaborators:
+                    logging.warning(f"No collaborators found for document ID {doc.id}. Skipping.")
+                    continue
+
+                # Kirim email ke setiap kolaborator
+                for collaborator in collaborators:
+                    try:
+                        send_email(
+                            to_email=collaborator.email,
+                            subject=f"Document: {doc.title}",
+                            body=doc.content
+                        )
+                        logging.info(f"Email sent to {collaborator.email}")
+                    except Exception as e:
+                        logging.error(f"Failed to send email to {collaborator.email}: {str(e)}")
+
+                # Tandai dokumen sebagai sudah dikirim
+                doc.is_sent = True
+                doc.sent_at = datetime.now()  # Tambahkan timestamp pengiriman (opsional)
+                db.commit()
+                logging.info(f"Document '{doc.title}' marked as sent.")
+            except Exception as doc_error:
+                logging.error(f"Error processing document ID {doc.id}: {str(doc_error)}")
+                db.rollback()  # Rollback jika ada error pada dokumen tertentu
 
         logging.info("Email scheduling job completed successfully.")
 
     except Exception as e:
         logging.error(f"Error in send_scheduled_emails: {str(e)}")
     finally:
-        db.close()  # Pastikan sesi database selalu ditutup
-        logging.info("Database session closed.")
+        try:
+            db.close()  # Pastikan sesi database selalu ditutup
+            logging.info("Database session closed.")
+        except Exception as close_error:
+            logging.error(f"Error closing database session: {str(close_error)}")
 
 @app.on_event("startup")
 def start_scheduler():

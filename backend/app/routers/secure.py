@@ -15,9 +15,13 @@ from app.models import Document, Collaborator, User
 import logging
 from pydantic import ValidationError
 from sqlalchemy.sql import exists
+import requests
+import os
 
 router = APIRouter()
 
+IZIN_SAKIT_BASE_URL = os.getenv("IZIN_SAKIT_BASE_URL")
+IZIN_SAKIT_AUTH_TOKEN = os.getenv("IZIN_SAKIT_AUTH_TOKEN")
 @router.post("/document/create")
 def create_document(
     request: DocumentCreate,
@@ -233,3 +237,88 @@ def validate_collaborator(
     except Exception as e:
         logging.error(f"Error validating email: {str(e)}")
         raise HTTPException(status_code=500, detail="Error validating email")
+
+@router.post("/document/send-pdf/{document_id}")
+def send_pdf_to_email(
+    document_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Mengintegrasikan API izinSakit untuk mengirimkan PDF via email berdasarkan document_id.
+    """
+    try:
+        # Ambil dokumen berdasarkan document_id
+        document = db.query(Document).filter(Document.id == document_id).first()
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        # Ambil kolaborator terkait dokumen
+        collaborators = (
+            db.query(User.email)
+            .join(Collaborator, User.id == Collaborator.collaborator_id)
+            .filter(Collaborator.document_id == document_id)
+            .all()
+        )
+        if not collaborators:
+            raise HTTPException(
+                status_code=404, detail="No collaborators found for the document"
+            )
+
+        # Kirim PDF ke setiap kolaborator
+        responses = []
+        for collaborator_email in collaborators:
+            payload = {"email": collaborator_email[0]}  # Ambil email dari query result
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {IZIN_SAKIT_AUTH_TOKEN}",
+            }
+
+            # Panggil API izinSakit
+            response = requests.post(
+                f"{IZIN_SAKIT_BASE_URL}/api/send-pdf/{document_id}",
+                json=payload,
+                headers=headers,
+            )
+
+            # Parsing respons API izinSakit
+            if response.status_code == 202:
+                responses.append(
+                    {
+                        "email": collaborator_email[0],
+                        "status": "queued",
+                        "jobId": response.json().get("jobId"),
+                        "message": response.json().get("message"),
+                    }
+                )
+                logging.info(f"PDF queued for email: {collaborator_email[0]}")
+            elif response.status_code == 400:
+                responses.append(
+                    {
+                        "email": collaborator_email[0],
+                        "status": "error",
+                        "message": response.json().get("message"),
+                    }
+                )
+                logging.warning(
+                    f"PDF not generated for email: {collaborator_email[0]}"
+                )
+            else:
+                responses.append(
+                    {
+                        "email": collaborator_email[0],
+                        "status": "failed",
+                        "message": response.text,
+                    }
+                )
+                logging.error(
+                    f"Failed to send PDF to email: {collaborator_email[0]}"
+                )
+
+        return {"message": "PDF processing completed", "responses": responses}
+
+    except Exception as e:
+        logging.error(f"Error in send_pdf_to_email: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )

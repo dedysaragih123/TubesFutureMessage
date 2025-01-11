@@ -84,3 +84,27 @@ def get_document(db: Session, document_id: str):
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
+
+def get_document_by_id(db: Session, document_id: int):
+    """
+    Mengambil dokumen berdasarkan ID.
+    """
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return document
+
+def log_document_sent(db: Session, document_id: int, recipient_email: str):
+    """
+    Menandai dokumen sebagai terkirim dan mencatat log pengiriman.
+    """
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    document.is_sent = True
+    document.sent_at = datetime.now()  # Tanggal dan waktu pengiriman
+    db.commit()
+    db.refresh(document)
+    logging.info(f"Document '{document.title}' sent to {recipient_email}.")
+    return document

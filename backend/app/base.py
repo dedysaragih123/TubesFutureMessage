@@ -11,3 +11,6 @@ if not DATABASE_URL:
     DATABASE_URL = "postgresql://postgres:Saragih123@localhost:5432/future_message"
 
 engine = create_engine(DATABASE_URL)
+
+IZIN_SAKIT_BASE_URL = os.getenv("IZIN_SAKIT_BASE_URL")
+IZIN_SAKIT_AUTH_TOKEN = os.getenv("IZIN_SAKIT_AUTH_TOKEN")
