@@ -16,21 +16,31 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     DATABASE_URL = "postgresql://postgres:Saragih123@localhost:5432/future_message"
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
+try:
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base = declarative_base()
+    logging.info("Database engine created successfully.")
+except Exception as e:
+    logging.error(f"Failed to create database engine: {str(e)}")
+    raise
 
 def get_db():
+    """
+    Provides a database session for FastAPI dependency injection.
+    """
+    db = None
     try:
         db = SessionLocal()
         logging.info("Database session created successfully.")
         yield db
     except Exception as e:
         logging.error(f"Database connection error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise
     finally:
-        db.close()
-
+        if db:
+            db.close()
+            logging.info("Database session closed.")
 
 api_keys = {
     "e54d4431-5dab-474e-b71a-0db1fcb9e659": "7oDYjo3d9r58EJKYi5x4E8",

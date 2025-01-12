@@ -3,7 +3,7 @@ uvicorn==0.22.0
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.10
 pydantic[email]==1.10.7
-passlib[bcrypt]
+passlib[bcrypt]>=1.7.4
 python-jose
 apscheduler
 python-dotenv

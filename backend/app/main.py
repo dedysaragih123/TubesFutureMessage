@@ -5,13 +5,13 @@ from app.routers import secure, public
 from app import auth
 from app.auth import get_user
 from app.base import Base, engine
-import logging
-from apscheduler.schedulers.background import BackgroundScheduler
-from app.db import get_db, SessionLocal
+from app.db import get_db, SessionLocal  # Pastikan SessionLocal diimpor
 from app.utils.email_utils import send_email
 from sqlalchemy.orm import Session
 from app.models import Document, Collaborator, User
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # Pastikan datetime diimpor
+import logging
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Inisialisasi aplikasi
 app = FastAPI()
@@ -21,6 +21,7 @@ scheduler = BackgroundScheduler()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000",
+                   "https://future-message-caexg0bxeha9d2et.southeastasia-01.azurewebsites.net/",
                    "https://my-app.vercel.app",],  # Ganti dengan domain deploy
     allow_credentials=True,
     allow_methods=["*"],
@@ -32,7 +33,8 @@ app.include_router(secure.router, prefix="/api/v1", dependencies=[Depends(get_us
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 
 # Logging dasar
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.info("Application started.")
 
 # Middleware untuk logging request
 @app.middleware("http")
@@ -53,9 +55,10 @@ async def read_root():
 
 # Startup event
 @app.on_event("startup")
-async def on_startup():
+def on_startup():
     if not scheduler.running:
-        scheduler.add_job(send_scheduled_emails, 'interval', minutes=1)
+        if not scheduler.get_jobs():
+            scheduler.add_job(send_scheduled_emails, 'interval', minutes=1)
         scheduler.start()
 
 # Shutdown event (opsional)

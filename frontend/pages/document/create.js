@@ -5,9 +5,9 @@ import styles from '../../styles/document.module.css';
 // Utility untuk mendekode JWT token
 const decodeToken = (token) => {
     try {
-        const payload = token.split('.')[1]; // Bagian payload dari JWT
-        const decodedPayload = atob(payload); // Decode base64
-        return JSON.parse(decodedPayload); // Konversi ke objek JSON
+        const payload = token.split('.')[1];
+        const decodedPayload = atob(payload);
+        return JSON.parse(decodedPayload);
     } catch (error) {
         console.error('Error decoding token:', error);
         return null;
@@ -32,7 +32,7 @@ export default function CreateDocument() {
     const [collaborators, setCollaborators] = useState([]);
     const [newCollaborator, setNewCollaborator] = useState('');
     const [error, setError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentUserEmail, setCurrentUserEmail] = useState('');
 
     // Ambil token dan email pengguna saat komponen dimount
@@ -64,54 +64,50 @@ export default function CreateDocument() {
 
     const handleAddCollaborator = async () => {
         if (!newCollaborator.trim()) {
-            setError("Email is required."); // Tampilkan pesan jika email kosong
+            setError('Email is required.');
             return;
         }
 
         try {
-            // Kirim permintaan ke backend untuk memvalidasi email
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/v1/validate-collaborator/${newCollaborator}`,
                 {
-                    method: "GET",
+                    method: 'GET',
                     headers: {
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                     },
                 }
             );
 
             const data = await response.json();
-
-            // Periksa respons dari server
             if (!response.ok || !data.valid) {
-                setError(data.message || "User not found."); // Tampilkan pesan error
+                setError(data.message || 'User not found.');
                 return;
             }
 
-            // Jika valid, tambahkan collaborator
             if (!collaborators.includes(newCollaborator)) {
                 setCollaborators([...collaborators, newCollaborator]);
-                setNewCollaborator("");
-                setError(""); // Reset pesan error
+                setNewCollaborator('');
+                setError('');
                 alert(`Collaborator ${newCollaborator} added successfully!`);
             } else {
-                setError("Collaborator already added."); // Tampilkan pesan jika email sudah ada
+                setError('Collaborator already added.');
             }
         } catch (error) {
-            console.error("Error validating collaborator:", error);
-            setError("Failed to validate collaborator. Please try again."); // Tampilkan error jika terjadi masalah jaringan
+            console.error('Error validating collaborator:', error);
+            setError('Failed to validate collaborator. Please try again.');
         }
     };
 
     const handleScheduleAndSend = async () => {
-        if (isSubmitting) return; // Prevent multiple submissions
+        if (isSubmitting) return;
 
         if (!docTitle.trim() || !message.trim() || !deliveryDate || collaborators.length === 0) {
             alert('All fields are required, and at least one collaborator must be added.');
             return;
         }
 
-        setIsSubmitting(true); // Disable button during submission
+        setIsSubmitting(true);
 
         const token = localStorage.getItem('token') || getTokenFromCookies();
         if (!token) {
@@ -150,7 +146,7 @@ export default function CreateDocument() {
             }
 
             alert(data.message);
-            setDocTitle(''); // Reset form
+            setDocTitle('');
             setMessage('');
             setDeliveryDate('');
             setCollaborators([]);
@@ -158,7 +154,7 @@ export default function CreateDocument() {
             console.error('Error creating document:', error);
             alert(`Failed to create document: ${error.message || error}`);
         } finally {
-            setIsSubmitting(false); // Re-enable button
+            setIsSubmitting(false);
         }
     };
 
@@ -171,64 +167,67 @@ export default function CreateDocument() {
                 </div>
             </nav>
 
-            <h1 className={styles.title}>Create a New Document</h1>
-            <div className={styles.form}>
-                <label className={styles.label}>Add Collaborators:</label>
-                <div className={styles.collaboratorInput}>
+            <div className={styles.formContainer}>
+                <h1 className={styles.title}>Create a New Document</h1>
+                <div className={styles.form}>
+                    <label className={styles.label}>Document Title:</label>
                     <input
-                        type="email"
-                        placeholder="Enter collaborator's email"
-                        value={newCollaborator}
-                        onChange={(e) => setNewCollaborator(e.target.value)}
-                        className={`${styles.input} ${error ? styles.inputError : ''}`}
+                        type="text"
+                        placeholder="Enter document title"
+                        value={docTitle}
+                        onChange={(e) => setDocTitle(e.target.value)}
+                        className={styles.input}
                     />
-                    <button onClick={handleAddCollaborator} className={styles.button}>
-                        Add
-                    </button>
+
+                    <label className={styles.label}>Message:</label>
+                    <textarea
+                        placeholder="Write your message here..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className={styles.textArea}
+                    ></textarea>
+
+                    <label className={styles.label}>Delivery Date:</label>
+                    <input
+                        type="date"
+                        value={deliveryDate}
+                        onChange={(e) => setDeliveryDate(e.target.value)}
+                        className={styles.input}
+                    />
+
+                    <label className={styles.label}>Add Collaborators:</label>
+                    <div className={styles.collaboratorInput}>
+                        <input
+                            type="email"
+                            placeholder="Enter collaborator's email"
+                            value={newCollaborator}
+                            onChange={(e) => setNewCollaborator(e.target.value)}
+                            className={`${styles.input} ${error ? styles.inputError : ''}`}
+                        />
+                        <button onClick={handleAddCollaborator} className={styles.button}>
+                            Add
+                        </button>
+                    </div>
+                    {error && <p className={styles.error}>{error}</p>}
+
+                    <div className={styles.collaboratorsList}>
+                        {collaborators.map((email, index) => (
+                            <span key={index} className={styles.collaborator}>
+                                {email}
+                            </span>
+                        ))}
+                    </div>
+
+                    <div className={styles.actions}>
+                        <button
+                            className={styles.buttonPrimary}
+                            onClick={handleScheduleAndSend}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Submitting...' : 'Schedule and Send'}
+                        </button>
+                    </div>
                 </div>
-                {error && <p className={styles.error}>{error}</p>}
-            </div>
-            <div className={styles.collaboratorsList}>
-                {collaborators.map((email, index) => (
-                    <span key={index} className={styles.collaborator}>
-                        {email}
-                    </span>
-                ))}
-            </div>
-
-            <label>Document Title:</label>
-            <input
-                type="text"
-                placeholder="Enter document title"
-                value={docTitle}
-                onChange={(e) => setDocTitle(e.target.value)}
-                className={styles.input}
-            />
-
-            <label>Message:</label>
-            <textarea
-                placeholder="Write your message here..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className={styles.textArea}
-            ></textarea>
-
-            <label>Delivery Date:</label>
-            <input
-                type="date"
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-                className={styles.input}
-            />
-
-            <div className={styles.actions}>
-                <button
-                    className={styles.buttonPrimary}
-                    onClick={handleScheduleAndSend}
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? 'Submitting...' : 'Schedule and Send'}
-                </button>
             </div>
         </div>
     );

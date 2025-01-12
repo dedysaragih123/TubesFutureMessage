@@ -60,3 +60,8 @@ class DocumentCreate(BaseModel):
         if isinstance(value, str) and len(value) == 10:  # Format: YYYY-MM-DD
             value += "T00:00:00"
         return datetime.fromisoformat(value)
+    
+class EmailRequest(BaseModel):
+    to_email: EmailStr
+    subject: str
+    body: str

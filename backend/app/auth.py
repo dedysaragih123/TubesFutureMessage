@@ -13,9 +13,10 @@ import logging
 router = APIRouter()
 SECRET_KEY = "e4f01b2c8a4e4268f9ad3e3f5c2a4d2e4c8f0a1d3b6c7e2f1a0d5f9c8b1e2a4" 
 ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 @router.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -36,8 +37,8 @@ def get_user(email: str, db: Session = Depends(get_db)):
     return user
 
 def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=1)  # Token berlaku 1 jam
+    to_encode = data.copy()   
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)  # Token berlaku 1 jam
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -67,7 +68,11 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         logging.error(f"Unexpected error during login: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred during login")
 
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password: str, hashed_password: str):
+    """
+    Fungsi untuk memverifikasi password pengguna.
+    """
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -81,7 +86,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
         return user
-    except JWTError:
-        logging.error("Token decoding failed.")
+    except JWTError as e:
+        logging.error(f"JWT decoding error: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid token")
     
