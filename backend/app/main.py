@@ -23,7 +23,7 @@ app.add_middleware(
     allow_origins=["http://localhost:3000",
                 #    "https://future-message-caexg0bxeha9d2et.southeastasia-01.azurewebsites.net",
                     "https://tubes-future-message-f185jejxu-dedys-projects-a843acc4.vercel.app",  # Domain khusus build Vercel
-                   "https://tubes-future-message.vercel.app",],  # Ganti dengan domain deploy
+                   "https://tubes-future-message.vercel.app"],  # Ganti dengan domain deploy
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

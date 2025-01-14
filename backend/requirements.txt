@@ -5,6 +5,6 @@ psycopg2-binary==2.9.10
 pydantic[email]==1.10.7
 passlib[bcrypt]>=1.7.4
 python-jose
-apscheduler
+APScheduler==3.9.1
 python-dotenv
 requests

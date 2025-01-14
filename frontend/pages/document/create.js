@@ -125,7 +125,7 @@ export default function CreateDocument() {
         };
 
         try {
-            const response = await fetch(
+            const createResponse = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/v1/document/create?email=${currentUserEmail}`,
                 {
                     method: 'POST',
@@ -137,22 +137,54 @@ export default function CreateDocument() {
                 }
             );
 
-            const data = await response.json();
-            if (!response.ok) {
+            const createData = await createResponse.json();
+            if (!createResponse.ok) {
                 const errorMessage = Array.isArray(data.detail)
                     ? data.detail.map((err) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
                     : data.detail || 'Unknown error';
                 throw new Error(errorMessage);
             }
+            alert(createData.message);
 
-            alert(data.message);
+            // Mendapatkan `document_id` dari response backend
+            const documentId = createData.document_id;
+
+            // Step 2: Kirim email ke semua kolaborator
+            for (const collaborator of collaborators) {
+                const emailPayload = {
+                    to_email: collaborator,
+                    subject: `Document: ${docTitle}`,
+                    body: `<h1>${docTitle}</h1><p>${message}</p>`,
+                };
+
+                const emailResponse = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/document/send-email/${documentId}?email=${currentUserEmail}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(emailPayload),
+                    }
+                );
+
+                const emailResult = await emailResponse.json();
+                if (!emailResponse.ok) {
+                    throw new Error(emailResult.detail || 'Failed to send email.');
+                }
+
+                alert(emailResult.message || 'Email sent successfully!');
+
+            } 
             setDocTitle('');
             setMessage('');
             setDeliveryDate('');
             setCollaborators([]);
-        } catch (error) {
-            console.error('Error creating document:', error);
-            alert(`Failed to create document: ${error.message || error}`);
+            setNewCollaborator('');
+        }catch (error) {
+            console.error('Error creating document or sending email:', error);
+            alert(`Failed: ${error.message || error}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -212,9 +244,17 @@ export default function CreateDocument() {
 
                     <div className={styles.collaboratorsList}>
                         {collaborators.map((email, index) => (
-                            <span key={index} className={styles.collaborator}>
-                                {email}
-                            </span>
+                            <div key={index} className={styles.collaboratorContainer}>
+                                <span className={styles.collaborator}>{email}</span>
+                                <button
+                                    className={styles.removeButton}
+                                    onClick={() => {
+                                        setCollaborators(collaborators.filter((_, i) => i !== index));
+                                    }}
+                                >
+                                    Remove
+                                </button>
+                            </div>
                         ))}
                     </div>
 

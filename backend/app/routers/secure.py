@@ -66,7 +66,10 @@ def create_document(
             )
 
         logging.info(f"Document created with ID: {new_document.id}")
-        return {"message": f"Document '{request.title}' created successfully!"}
+        return {
+            "message": f"Document '{request.title}' created successfully!",
+            "document_id": new_document.id  # Tambahkan document_id ke respons
+        }
 
     except Exception as e:
         db.rollback()
@@ -218,36 +221,6 @@ def list_documents(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch documents: {str(e)}")
 
-
-# ====== EMAIL MANAGEMENT ======
-
-@router.post("/send-email")
-def send_email_endpoint(
-    email_request: EmailRequest,
-    user_login: UserLogin = Body(...),
-    email: str = Query(...),
-    db: Session = Depends(get_db),
-):
-    """
-    Endpoint to send email using email and password directly.
-    """
-    # Authenticate user
-    db_user = db.query(User).filter(User.email == user_login.email).first()
-    if not db_user or not pwd_context.verify(user_login.password, db_user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    # Send email
-    try:
-        send_email(
-            db=db,
-            to_email=email_request.to_email,
-            subject=email_request.subject,
-            body=email_request.body,
-        )
-        return {"message": "Emails sent successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send emails: {str(e)}")
-
 # ====== INTEGRATION: Izin Sakit ======
 
 @router.post("/integrate/sick-leave")
@@ -325,3 +298,37 @@ def generate_pdf_for_sick_leave(
         return response
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
+
+@router.post("/document/send-email/{document_id}")
+def send_email_endpoint(
+    document_id: int,
+    email_request: EmailRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Endpoint untuk mengirim email dengan menggunakan layanan eksternal.
+    """
+    try:
+        # Validasi dokumen dan akses pengguna
+        document = db.query(Document).filter(
+            Document.id == document_id, Document.owner_id == current_user.id
+        ).first()
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found or access denied")
+
+        to_email = email_request.to_email
+        subject = email_request.subject or f"Document: {document.title}"
+        body = email_request.body or f"<h1>{document.title}</h1><p>{document.content}</p>"
+
+        # Kirim email
+        result = send_email(db, document_id, to_email, subject, body)
+        return {
+            "message": "Email sent successfully",
+            "result": result,
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
