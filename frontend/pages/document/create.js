@@ -101,29 +101,38 @@ export default function CreateDocument() {
 
     const handleScheduleAndSend = async () => {
         if (isSubmitting) return;
-
+    
         if (!docTitle.trim() || !message.trim() || !deliveryDate || collaborators.length === 0) {
             alert('All fields are required, and at least one collaborator must be added.');
             return;
         }
-
+    
+        const now = new Date();
+        const selectedDate = new Date(deliveryDate);
+    
+        if (selectedDate <= now) {
+            alert('Delivery date must be in the future.');
+            return;
+        }
+    
         setIsSubmitting(true);
-
+    
         const token = localStorage.getItem('token') || getTokenFromCookies();
         if (!token) {
             alert('User not logged in. Redirecting to login page.');
             router.push('/auth/login');
             return;
         }
+    
         const formattedDeliveryDate = `${deliveryDate}T00:00:00`;
-
+    
         const payload = {
             title: docTitle.trim(),
             content: message.trim(),
             delivery_date: formattedDeliveryDate,
             collaborators,
         };
-
+    
         try {
             const createResponse = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/v1/document/create?email=${currentUserEmail}`,
@@ -136,60 +145,29 @@ export default function CreateDocument() {
                     body: JSON.stringify(payload),
                 }
             );
-
+    
             const createData = await createResponse.json();
             if (!createResponse.ok) {
-                const errorMessage = Array.isArray(data.detail)
-                    ? data.detail.map((err) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
-                    : data.detail || 'Unknown error';
+                const errorMessage = Array.isArray(createData.detail)
+                    ? createData.detail.map((err) => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+                    : createData.detail || 'Unknown error';
                 throw new Error(errorMessage);
             }
             alert(createData.message);
-
-            // Mendapatkan `document_id` dari response backend
-            const documentId = createData.document_id;
-
-            // Step 2: Kirim email ke semua kolaborator
-            for (const collaborator of collaborators) {
-                const emailPayload = {
-                    to_email: collaborator,
-                    subject: `Document: ${docTitle}`,
-                    body: `<h1>${docTitle}</h1><p>${message}</p>`,
-                };
-
-                const emailResponse = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/document/send-email/${documentId}?email=${currentUserEmail}`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(emailPayload),
-                    }
-                );
-
-                const emailResult = await emailResponse.json();
-                if (!emailResponse.ok) {
-                    throw new Error(emailResult.detail || 'Failed to send email.');
-                }
-
-                alert(emailResult.message || 'Email sent successfully!');
-
-            } 
+    
             setDocTitle('');
             setMessage('');
             setDeliveryDate('');
             setCollaborators([]);
             setNewCollaborator('');
-        }catch (error) {
-            console.error('Error creating document or sending email:', error);
+        } catch (error) {
+            console.error('Error creating document:', error);
             alert(`Failed: ${error.message || error}`);
         } finally {
             setIsSubmitting(false);
         }
     };
-
+    
     return (
         <div className={styles.container}>
             <nav className={styles.navbar}>

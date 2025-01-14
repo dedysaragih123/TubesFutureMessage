@@ -56,10 +56,14 @@ class DocumentCreate(BaseModel):
 
     @validator("delivery_date", pre=True)
     def validate_delivery_date(cls, value):
-        # Jika hanya tanggal diberikan, tambahkan waktu default
+        # Tambahkan waktu default jika hanya tanggal diberikan
         if isinstance(value, str) and len(value) == 10:  # Format: YYYY-MM-DD
             value += "T00:00:00"
-        return datetime.fromisoformat(value)
+        
+        delivery_date = datetime.fromisoformat(value)
+        if delivery_date <= datetime.now():
+            raise ValueError("Delivery date must be in the future.")
+        return delivery_date
     
 class EmailRequest(BaseModel):
     to_email: EmailStr

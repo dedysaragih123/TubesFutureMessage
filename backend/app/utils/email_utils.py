@@ -3,6 +3,11 @@ from sqlalchemy.orm import Session
 from app.models import Document, User, Collaborator  # Sesuaikan impor model Anda
 from datetime import datetime
 import os
+from app.db import SessionLocal 
+import logging
+from apscheduler.schedulers.background import BackgroundScheduler
+
+scheduler = BackgroundScheduler()
 
 def get_access_token():
     """
@@ -70,3 +75,60 @@ def send_email(db: Session, document_id: int, to_email: str, subject: str, body:
             raise Exception(f"Failed to send email via external service: {http_err}")
     except requests.exceptions.RequestException as e:
         raise Exception(f"Failed to send email via external service: {e}")
+
+def send_scheduled_emails(document_id: int):
+    """
+    Kirim email sesuai dengan jadwal (delivery_date).
+    """
+    db = SessionLocal()
+    try:
+        logging.info(f"Processing scheduled email for document ID: {document_id}")
+
+        # Ambil dokumen dari database
+        document = db.query(Document).filter(Document.id == document_id).first()
+        if not document:
+            logging.warning(f"Document ID {document_id} not found.")
+            return
+
+        # Periksa apakah dokumen sudah dikirim
+        if document.is_sent:
+            logging.info(f"Document ID {document_id} already sent.")
+            return
+
+        # Periksa apakah waktu saat ini >= delivery_date
+        now = datetime.now()
+        if now < document.delivery_date:
+            logging.info(f"Document ID {document_id} scheduled for {document.delivery_date}. Not sending yet.")
+            return
+
+        # Ambil kolaborator untuk dokumen
+        collaborators = (
+            db.query(User.email)
+            .join(Collaborator, User.id == Collaborator.collaborator_id)
+            .filter(Collaborator.document_id == document_id)
+            .all()
+        )
+        if not collaborators:
+            logging.warning(f"No collaborators found for Document ID {document_id}. Skipping.")
+            return
+
+        # Kirim email ke setiap kolaborator
+        for collaborator in collaborators:
+            send_email(
+                db=db,
+                document_id=document_id,
+                to_email=collaborator.email,
+                subject=f"Document: {document.title}",
+                body=document.content,
+            )
+            logging.info(f"Email sent to {collaborator.email}")
+
+        # Tandai dokumen sebagai sudah dikirim
+        document.is_sent = True
+        document.sent_at = datetime.now()
+        db.commit()
+        logging.info(f"Document ID {document_id} marked as sent.")
+    except Exception as e:
+        logging.error(f"Error processing document ID {document_id}: {str(e)}")
+    finally:
+        db.close()

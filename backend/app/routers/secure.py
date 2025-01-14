@@ -15,9 +15,11 @@ import logging
 from pydantic import ValidationError
 from sqlalchemy.sql import exists
 import os
-from app.utils.email_utils import send_email
+from app.utils.email_utils import send_email,scheduler, send_scheduled_emails
 from app.utils.izin_sakit import create_sick_leave_request, submit_sick_leave_form, generate_sick_leave_pdf
 from urllib.parse import unquote
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.schedulers.background import BackgroundScheduler
 
 router = APIRouter()
 
@@ -42,6 +44,7 @@ def create_document(
         # Validate collaborators
         for collaborator_email in request.collaborators:
             collaborator = db.query(User).filter(User.email == collaborator_email).first()
+            logging.info(f"Validating collaborator: {collaborator_email}")
             if not collaborator:
                 logging.error(f"Collaborator {collaborator_email} not found")
                 raise HTTPException(
@@ -50,11 +53,25 @@ def create_document(
                 )
         
         # Create the document
+        logging.info("Creating document record...")
         new_document = create_document_record(
             db=db,
             document=request,
             owner_id=current_user.id,
         )
+
+        # Schedule email job with correct delivery_date
+        if new_document.delivery_date:
+            logging.info(f"Scheduling email for delivery at {new_document.delivery_date}")
+            scheduler.add_job(
+                send_scheduled_emails,  # Fungsi yang akan dijalankan
+                trigger=DateTrigger(run_date=new_document.delivery_date),  # Trigger sesuai delivery_date
+                args=[new_document.id],  # Argumen untuk fungsi
+                id=f"send_email_{new_document.id}",  # ID unik untuk job
+                replace_existing=True,  # Ganti job jika sudah ada
+            )
+        else:
+            logging.warning(f"No delivery_date provided for document {new_document.id}. Skipping scheduling.")
 
         # Add collaborators
         for collaborator_email in request.collaborators:
@@ -75,7 +92,8 @@ def create_document(
         db.rollback()
         logging.error(f"Error creating document: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create document")
-
+    finally:
+        db.close()
 
 @router.put("/document/update")
 def update_document(
@@ -332,3 +350,9 @@ def send_email_endpoint(
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send email")
+
+@router.on_event("startup")
+def start_secure_scheduler():
+    if not scheduler.running:
+        scheduler.start()
+        logging.info("Scheduler started in secure.py")
