@@ -1,4 +1,4 @@
-from fastapi import Body, APIRouter, Depends, HTTPException, Query
+from fastapi import Body, APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from app.crud import (
     update_document_record,
@@ -7,7 +7,7 @@ from app.crud import (
     create_document_record
 )
 from app.user_crud import create_user
-from app.schemas import DocumentCreate, DocumentUpdate, CollaboratorAdd, UserCreate, EmailRequest, UserLogin
+from app.schemas import DocumentCreate, DocumentUpdate, CollaboratorAdd, UserCreate, EmailRequest, UserLogin, SickLeaveForm
 from app.db import get_db
 from app.auth import get_current_user, pwd_context
 from app.models import Document, Collaborator, User
@@ -16,14 +16,15 @@ from pydantic import ValidationError
 from sqlalchemy.sql import exists
 import os
 from app.utils.email_utils import send_email,scheduler, send_scheduled_emails
-from app.utils.izin_sakit import create_sick_leave_request, submit_sick_leave_form, generate_sick_leave_pdf
 from urllib.parse import unquote
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
+import requests
+from typing import Optional
 
 router = APIRouter()
 
-IZIN_SAKIT_BASE_URL = os.getenv("IZIN_SAKIT_BASE_URL", "https://izinsakit.site")
+IZIN_SAKIT_BASE_URL = os.getenv("IZIN_SAKIT_BASE_URL", "https://api.izinsakit.site")
 IZIN_SAKIT_AUTH_TOKEN = os.getenv("IZIN_SAKIT_AUTH_TOKEN")
 
 
@@ -238,84 +239,6 @@ def list_documents(
         return {"documents": list(documents.values())}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch documents: {str(e)}")
-
-# ====== INTEGRATION: Izin Sakit ======
-
-@router.post("/integrate/sick-leave")
-def create_sick_leave(
-    data: dict = Body(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Endpoint untuk membuat permohonan izin sakit.
-    """
-    username = data.get("username")
-    reason = data.get("reason")
-
-    if not username or not reason:
-        raise HTTPException(status_code=400, detail="Username and reason are required")
-    if len(reason) < 5:
-        raise HTTPException(status_code=400, detail="Reason must be at least 5 characters")
-
-    try:
-        response = create_sick_leave_request(username=username, reason=reason)
-        logging.info(f"Response from izin sakit: {response}")
-        return response
-    except HTTPException as e:
-        logging.error(f"Error from izin sakit service: {e.detail}")
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-@router.post("/integrate/sick-leave-form")
-def create_sick_leave_form(
-    form_data: dict = Body(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Endpoint untuk mengirimkan formulir izin sakit.
-    """
-    username = current_user.email.split('@')[0]  # Generate username dari email
-    form_data["username"] = username
-
-    try:
-        response = submit_sick_leave_form(form_data)
-        return response
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-@router.post("/integrate/sick-leave-save-answers")
-def save_answers_to_sick_leave_form(
-    answers: dict = Body(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Endpoint untuk menyimpan jawaban formulir izin sakit.
-    """
-    username = current_user.email.split('@')[0]  # Tambahkan username dari email
-    answers["username"] = username
-
-    try:
-        response = submit_sick_leave_form(answers)
-        return {"message": "Sick leave answers saved successfully", "data": response}
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-@router.get("/integrate/sick-leave-pdf/{id}")
-def generate_pdf_for_sick_leave(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Endpoint untuk menghasilkan PDF untuk izin sakit.
-    """
-    try:
-        response = generate_sick_leave_pdf(sick_leave_id=id)
-        return response
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 @router.post("/document/send-email/{document_id}")
 def send_email_endpoint(
