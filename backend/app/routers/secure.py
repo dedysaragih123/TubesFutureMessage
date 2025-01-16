@@ -7,7 +7,7 @@ from app.crud import (
     create_document_record
 )
 from app.user_crud import create_user
-from app.schemas import DocumentCreate, DocumentUpdate, CollaboratorAdd, UserCreate, EmailRequest, UserLogin, SickLeaveForm
+from app.schemas import DocumentCreate, DocumentUpdate, CollaboratorAdd, EmailRequest
 from app.db import get_db
 from app.auth import get_current_user, pwd_context
 from app.models import Document, Collaborator, User
@@ -23,10 +23,6 @@ import requests
 from typing import Optional
 
 router = APIRouter()
-
-IZIN_SAKIT_BASE_URL = os.getenv("IZIN_SAKIT_BASE_URL", "https://api.izinsakit.site")
-IZIN_SAKIT_AUTH_TOKEN = os.getenv("IZIN_SAKIT_AUTH_TOKEN")
-
 
 # ====== DOCUMENT MANAGEMENT ======
 

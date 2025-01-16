@@ -69,3 +69,7 @@ class EmailRequest(BaseModel):
     to_email: EmailStr
     subject: str
     body: str
+
+class LoginRequest(BaseModel):
+    username: EmailStr
+    password: str

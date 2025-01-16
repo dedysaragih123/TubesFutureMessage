@@ -42,15 +42,6 @@ export default function Dashboard() {
                         <h2>Update an Existing Document</h2>
                         <p>Edit and refine an existing document.</p>
                     </div>
-
-                    <div
-                        className={styles.optionCard}
-                        onClick={() => handleNavigation('/sickleave/create')}
-                    >
-                        <img src="/icons/sickleave-icon.png" alt="Sick Leave Icon" className={styles.icon} />
-                        <h2>Create Sick Leave Form</h2>
-                        <p>Submit your sick leave request and generate the form.</p>
-                    </div>
                 </div>
             </div>
         </div>
