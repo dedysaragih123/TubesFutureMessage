@@ -14,7 +14,7 @@ def get_access_token():
     Fungsi untuk mendapatkan access token dari API external.
     """
     url = "https://api.fintrackit.my.id/v1/auth/token"
-    api_key = os.getenv("EXTERNAL_API_KEY", "key_btICYdooxK6e426PIxuGBW0Sc3yqePp7")
+    api_key = os.getenv("EXTERNAL_API_KEY", "key_2frPCWYcsH54ughsWJ8_NYHC2WWm1H-Y")
     headers = {
         "X-API-Key": api_key
     }
