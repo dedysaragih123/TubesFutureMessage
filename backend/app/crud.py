@@ -50,9 +50,11 @@ def update_document_record(db: Session, document_id: int, title: str, content: s
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     
-    # Perbarui nilai dokumen
-    doc.title = title
-    doc.content = content
+    # Update hanya jika nilai diberikan
+    if title is not None:
+        doc.title = title
+    if content is not None:
+        doc.content = content
 
     # Simpan perubahan ke database
     db.commit()

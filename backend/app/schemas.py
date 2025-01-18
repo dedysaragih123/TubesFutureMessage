@@ -52,7 +52,7 @@ class DocumentCreate(BaseModel):
     title: str
     content: str
     delivery_date: datetime
-    collaborators: list[str]
+    collaborators: List[EmailStr] = Field(default_factory=list)
 
     @validator("delivery_date", pre=True)
     def validate_delivery_date(cls, value):
@@ -61,7 +61,7 @@ class DocumentCreate(BaseModel):
             value += "T00:00:00"
         
         delivery_date = datetime.fromisoformat(value)
-        if delivery_date <= datetime.now():
+        if delivery_date < datetime.now():
             raise ValueError("Delivery date must be in the future.")
         return delivery_date
     

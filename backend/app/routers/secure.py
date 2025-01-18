@@ -7,7 +7,7 @@ from app.crud import (
     create_document_record
 )
 from app.user_crud import create_user
-from app.schemas import DocumentCreate, DocumentUpdate, CollaboratorAdd, EmailRequest
+from app.schemas import DocumentCreate, DocumentUpdate, CollaboratorAdd, UserCreate, EmailRequest
 from app.db import get_db
 from app.auth import get_current_user, pwd_context
 from app.models import Document, Collaborator, User
@@ -61,7 +61,7 @@ def create_document(
         if new_document.delivery_date:
             logging.info(f"Scheduling email for delivery at {new_document.delivery_date}")
             scheduler.add_job(
-                send_scheduled_emails,  # Fungsi yang akan dijalankan
+                func=send_scheduled_emails,  # Fungsi yang akan dijalankan
                 trigger=DateTrigger(run_date=new_document.delivery_date),  # Trigger sesuai delivery_date
                 args=[new_document.id],  # Argumen untuk fungsi
                 id=f"send_email_{new_document.id}",  # ID unik untuk job
@@ -109,6 +109,11 @@ def update_document(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
+        # Fetch the document from the database
+        db_document = db.query(Document).filter(Document.id == document.id).first()
+        if not db_document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
         # Validate access
         is_collaborator = (
             db.query(exists().where(
@@ -123,13 +128,14 @@ def update_document(
         updated_doc = update_document_record(
             db=db,
             document_id=document.id,
-            title=document.title,
-            content=document.content,
+            title=document.title or db_document.title,
+            content=document.content or db_document.content,
         )
         return {"message": f"Document '{updated_doc.title}' updated successfully!"}
 
     except Exception as e:
         db.rollback()
+        logging.error(f"Error updating document: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update document: {str(e)}")
 
 @router.get("/document/view/{document_id}")
@@ -275,3 +281,5 @@ def start_secure_scheduler():
     if not scheduler.running:
         scheduler.start()
         logging.info("Scheduler started in secure.py")
+    else:
+        logging.info("Scheduler already running.")
